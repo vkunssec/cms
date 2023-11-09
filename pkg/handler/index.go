@@ -7,20 +7,20 @@ import (
 	"time"
 )
 
+type ResponseIndex struct {
+	Uptime      string `json:"uptime"`
+	Message     string `json:"message"`
+	Version     string `json:"version"`
+	Environment string `json:"env"`
+	Date        string `json:"date"`
+}
+
 func IndexHandler(w http.ResponseWriter, _ *http.Request) {
 	var start time.Time
 
-	type Response struct {
-		Uptime      string `json:"uptime"`
-		Message     string `json:"message"`
-		Version     string `json:"version"`
-		Environment string `json:"env"`
-		Date        string `json:"date"`
-	}
-
 	latency := time.Since(start).Round(time.Second)
 
-	response := Response{
+	response := ResponseIndex{
 		Version:     "1.0.0",
 		Uptime:      latency.String(),
 		Environment: os.Getenv("STAGE"),
