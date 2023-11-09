@@ -27,11 +27,12 @@ func main() {
 
 	routers := mux.NewRouter()
 
+	routers.Use(middleware.Logging)
+	routers.Use(middleware.Cors)
+
 	routers.HandleFunc("/", handler.IndexHandler).
 		Methods("GET").
 		Name("index")
-
-	routers.Use(middleware.Logging)
 
 	http.Handle("/", routers)
 
