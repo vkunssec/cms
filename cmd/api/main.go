@@ -5,6 +5,7 @@ import (
 	"cms/pkg/handler"
 	"cms/pkg/middleware"
 
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,6 +13,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
@@ -23,6 +26,24 @@ func main() {
 		portDefault = port
 	} else {
 		portDefault, _ = strconv.Atoi(portEnv)
+	}
+
+	uri := fmt.Sprintf("%s/?%s", os.Getenv("MONGODB_URI"), os.Getenv("MONGO_PARAM"))
+	clientOptions := options.Client().ApplyURI(uri)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		logs.Error.Fatalln(err)
+		panic(err)
+	}
+
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		logs.Error.Fatalln(err)
+		panic(err)
 	}
 
 	routers := mux.NewRouter()
@@ -45,6 +66,7 @@ func main() {
 	}
 	if err := srv.ListenAndServe(); err != nil {
 		logs.Error.Fatalln(err)
+		panic(err)
 	}
 
 	logs.Info.Println("listen port", portDefault)

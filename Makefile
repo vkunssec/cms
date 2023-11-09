@@ -1,6 +1,10 @@
-export MONGODB_URI=mongodb://localhost:27017
-export PORT=3001
-export STAGE=development
+# export MONGODB_URI=mongodb://localhost:27017
+# export MONGODB_PARAM=
+# export PORT=3001
+# export STAGE=development
+
+include .env
+export 
 
 all: build run
 

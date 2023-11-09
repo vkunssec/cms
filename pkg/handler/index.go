@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"cms/pkg/middleware"
+
 	"encoding/json"
 	"net/http"
 	"os"
@@ -26,6 +28,13 @@ func IndexHandler(w http.ResponseWriter, _ *http.Request) {
 		Environment: os.Getenv("STAGE"),
 		Message:     "OK",
 		Date:        time.Now().UTC().Format("2006-01-02T15:04:05.999Z"),
+	}
+
+	headers := middleware.GetHeaders()
+	for key, values := range headers {
+		for _, value := range values {
+			w.Header().Set(key, value)
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
