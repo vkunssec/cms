@@ -6,32 +6,30 @@ import (
 	"time"
 )
 
-type loggingResponseWriter struct {
+type loggingResponse struct {
 	http.ResponseWriter
 	statusCode int
 }
 
-func NewLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
-	return &loggingResponseWriter{w, http.StatusOK}
+func responseWriter(w http.ResponseWriter) *loggingResponse {
+	return &loggingResponse{w, http.StatusOK}
 }
 
-func (lrw *loggingResponseWriter) WriteHeader(code int) {
+func (lrw *loggingResponse) WriteHeader(code int) {
 	lrw.statusCode = code
 	lrw.ResponseWriter.WriteHeader(code)
 }
 
-func Logging(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-		startTime := time.Now()
+func Logging(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+	startTime := time.Now()
 
-		lrw := NewLoggingResponseWriter(w)
+	lrw := responseWriter(w)
 
-		next.ServeHTTP(lrw, r)
+	statusCode := lrw.statusCode
 
-		statusCode := lrw.statusCode
+	duration := time.Since(startTime).Round(time.Microsecond)
+	log.Printf("%d.%d status_code=%d %s=%s response_latency=%s", r.ProtoMajor, r.ProtoMinor, statusCode, r.Method, r.RequestURI, duration)
 
-		duration := time.Since(startTime).Round(time.Microsecond)
-		log.Printf("%d.%d status_code=%d %s=%s response_latency=%s", r.ProtoMajor, r.ProtoMinor, statusCode, r.Method, r.RequestURI, duration)
-	})
+	next(lrw, r)
 }

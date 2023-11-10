@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/urfave/negroni"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -45,15 +46,17 @@ func main() {
 		logs.Error.Fatalln(err)
 		panic(err)
 	}
+	logs.Info.Println("connected mongodb -> ", uri)
 
 	routers := mux.NewRouter()
 
-	routers.Use(middleware.Logging)
-	routers.Use(middleware.Cors)
+	n := negroni.New(
+		negroni.HandlerFunc(middleware.Cors),
+		negroni.HandlerFunc(middleware.Logging),
+	)
 
-	routers.HandleFunc("/", handler.IndexHandler).
-		Methods("GET").
-		Name("index")
+	handler.HandlerIndex(routers, *n, client)
+	handler.HandlerArticle(routers, *n, client)
 
 	http.Handle("/", routers)
 
